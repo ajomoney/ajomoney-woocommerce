@@ -38,6 +38,8 @@ function  ajomoney_payment_init() {
                 $this->init_settings();
 
                 add_action( 'woocommerce_update_options_payment_gateways_'.$this->id, array($this, 'process_admin_options') );
+
+                add_action( 'woocommerce_thank_you_'.$this->id, array( $this, 'thank_you_page') );
             }
 
             public function init_form_fields() {
@@ -75,16 +77,19 @@ function  ajomoney_payment_init() {
                 ) );
             }
 
-            public function process_payments($order_id) {
-                $order_id = wc_get_order($order_id);
+            public function process_payment($order_id) {
+
+                global $woocommerce;
+                // $order_id = wc_get_order($order_id);
+                $order = new WC_Order($order_id);
 
                 $order->update_status('on-hold', __('Awaiting AjoMoney payment', 'ajomoney-woocommerce' ));
 
-                $this->clear_ajomoney_payment_api();
+                // $this->clear_ajomoney_payment_api();
 
                 $order->reduce_order_stock();
 
-                WC()->cart->empty_cart();
+                $woocommerce->cart->empty_cart();
 
                 return  array(
                     'result' => 'success',
@@ -93,7 +98,33 @@ function  ajomoney_payment_init() {
             }
 
             public function clear_ajomoney_payment_api() {
+                $api_key     = '5384z9XT7';
+                $widget_key  = '53525880bd675362d449b60185f82ddf';
+                $phone       = '2578288658885555';
+                $amount      = 500;
+                $network_id  = '1'; // mtn
+                $reason      = 'Test';
 
+                $url = 'https://e.patasente.com/phantom-api/pay-with-patasente/' . $api_key . '/' . $widget_key . '?phone=' . $phone . '&amount=' . $amount . '&mobile_money_company_id=' . $network_id . '&reason=' . 'Test';
+
+                var_dump($url);
+
+                $response = wp_remote_post( $url, array( 'timeout' => 45 ) );
+
+                if ( is_wp_error( $response ) ) {
+                    $error_message = $response->get_error_message();
+                    return "Something went wrong: $error_message";
+                } else {
+                    echo '<pre>';
+                    var_dump( wp_remote_retrieve_body( $response ) );
+                    echo '</pre>';
+                }
+            }
+
+            public  function thank_you_page() {
+                if($this->instructions) {
+                    echo wpautop( $this->instructions );
+                }
             }
         }
     }
