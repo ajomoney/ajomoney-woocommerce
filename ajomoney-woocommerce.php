@@ -50,7 +50,7 @@ function  ajomoney_payment_init() {
                 add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 
                 // Check if the gateway can be used.
-                if ( ! $this->is_valid_for_use() ) {
+                if ( !$this->is_valid_for_use() ) {
                     $this->enabled = false;
                 }
             }
@@ -66,6 +66,13 @@ function  ajomoney_payment_init() {
 
                     return false;
 
+                }
+
+                if (($this->testMode == 'no') && !$this->apiKey) {
+                    # code...
+                    $this->msg = __( 'A secret api key is required.', 'ajomoney-woocommerce' );
+
+                    return false;
                 }
 
                 return true;
@@ -142,27 +149,27 @@ function  ajomoney_payment_init() {
             }
 
             /**
-             * Check if Paystack gateway is enabled.
+             * Check if AjoMoney gateway is enabled.
              *
              * @return bool
              */
-            public function is_available() {
+            // public function is_available() {
 
-                if ( 'yes' == $this->enabled ) {
+            //     if ( 'yes' == $this->enabled ) {
 
-                    if (!$this->testMode && !$this->apiKey) {
+            //         if (!$this->testMode && !$this->apiKey) {
 
-                        return false;
+            //             return false;
 
-                    }
+            //         }
 
-                    return true;
+            //         return true;
 
-                }
+            //     }
 
-                return false;
+            //     return false;
 
-            }
+            // }
 
         
 
@@ -208,7 +215,7 @@ function  ajomoney_payment_init() {
                 }
 
                 $order->update_status('on-hold', __('Awaiting AjoMoney payment confirmation.', 'ajomoney-woocommerce' ));
-
+                $theOrderData = $order->get_data();
                 $data = array(
                     "product_details" => $products,
                     "subtotal" => $order->total,
@@ -217,8 +224,8 @@ function  ajomoney_payment_init() {
                     "currency" => get_woocommerce_currency(),
                     "metadata" => [
                         'order_id' => $order_id,
-                        "shipping" => $order->shipping,
-                        "billing" => $order->billing,
+                        "shipping" => $theOrderData['shipping'],
+                        "billing" => $theOrderData['billing'],
                         "customer_user_agent" => $order->customer_user_agent
                     ]
                 );
