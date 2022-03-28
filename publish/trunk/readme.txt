@@ -4,7 +4,7 @@ Tags: woocommerce,ajomoney,bnpl,buy now pay later,checkout,payment gateway,niger
 Requires at least: 4.8.3
 Tested up to: 5.9.2
 Requires PHP: 5.6
-Stable tag: 1.0.0
+Stable tag: trunk
 License: GNU Public License
 License URI: https://www.gnu.org/licenses/
 

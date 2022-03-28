@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: AjoMoney Gateway For WooCommerce
+ * Plugin Name: AjoMoney Gateway for WooCommerce
  * Plugin URI: https://ajo.money/business
  * Description: WooCommerce buy now pay later and checkout gateway for AjoMoney
  * Version: 1.0.0
