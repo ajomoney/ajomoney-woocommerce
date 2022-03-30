@@ -315,10 +315,10 @@ function  ajomoney_payment_init() {
             
                                 $order = wc_get_order( $order_id );
 
-                                $order->payment_complete( $_REQUEST['id'] );
+                                $order->payment_complete( sanitize_text_field($_REQUEST['id']) );
 
                                 /* translators: %s: transaction reference */
-                                $order->add_order_note( sprintf( __( 'Payment via AjoMoney successful (Transaction Reference: %s)', 'ajomoney-woocommerce' ), $_REQUEST['id'] ) );
+                                $order->add_order_note( sprintf( __( 'Payment via AjoMoney successful (Transaction Reference: %s)', 'ajomoney-woocommerce' ), sanitize_text_field($_REQUEST['id']) ) );
                                 
                                 $order->update_status( 'completed' );
 
@@ -342,7 +342,7 @@ function  ajomoney_payment_init() {
                 return sprintf(
                     "%s://%s",
                     isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
-                    $_SERVER['SERVER_NAME']
+                    sanitize_text_field($_SERVER['SERVER_NAME'])
                 );
             }
         }
