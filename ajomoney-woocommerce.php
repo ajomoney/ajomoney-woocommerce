@@ -148,31 +148,6 @@ function  ajomoney_payment_init() {
 
             }
 
-            /**
-             * Check if AjoMoney gateway is enabled.
-             *
-             * @return bool
-             */
-            // public function is_available() {
-
-            //     if ( 'yes' == $this->enabled ) {
-
-            //         if (!$this->testMode && !$this->apiKey) {
-
-            //             return false;
-
-            //         }
-
-            //         return true;
-
-            //     }
-
-            //     return false;
-
-            // }
-
-        
-
             public function process_payment($order_id) {
 
                 global $woocommerce;
@@ -224,6 +199,7 @@ function  ajomoney_payment_init() {
                     "currency" => get_woocommerce_currency(),
                     "metadata" => [
                         'order_id' => $order_id,
+                        'shipping_fee' => $order->shipping_total,
                         "shipping" => $theOrderData['shipping'],
                         "billing" => $theOrderData['billing'],
                         "customer_user_agent" => $order->customer_user_agent
@@ -285,92 +261,11 @@ function  ajomoney_payment_init() {
                         //throw $th;
                     }
                 }
-                
-                // wc_add_notice( 'This is a Success notice <pre>'.json_encode($data).'</pre>', 'success' );
-
-                // $order->update_status('on-hold', __('Awaiting AjoMoney payment', 'ajomoney-woocommerce' ));
-
-                // $this->get_ajomoney_checkout_url($data, $order_id);
-
-                // $order->reduce_order_stock();
-
-                // $woocommerce->cart->empty_cart();
-
-                // return  array(
-                //     'result' => 'success',
-                //     'redirect' => $this->get_return_url($order)
-                // );
-            }
-
-            public function get_ajomoney_checkout_url($data, $order_id) {
-
-                global $woocommerce;
-
-                $order = new WC_Order($order_id);
-
-                $baseUrl = $this->testMode ==  'yes' ? 'https://ajomoney-merchant-api.herokuapp.com/api/v1/' : 'https://business-api.myajopay.com/api/v1/';
-
-                $endpoint = $baseUrl.'store/generate/payment-link';
-
-                $apiKey = $this->testMode == 'yes' ? 'eyJpdiI6IlBDMGpIQmhMUHB5ZkVRdE5QbElqOFE9PSIsInZhbHVlIjoiMXlWWERmK1BNRWRiRmdYcGt6VXVSdEZad1F2T1FHRDJSTkJXOENvNVRtRWNPWWVvMU9RcTdCdGh1S2VLZjd3bCtPZHRQcG1ZS1ZaVG8rWWV5eWEyYVVjUTVZMk8xbUFLRzNUSFZjeUVBVjZ4Ym1xYWpzRExtY0JyN3JzNUlFSlciLCJtYWMiOiI5YzE0OGFiZWM5ZjMwYTA0ZTMxODhjOGQwY2I2MGMzNTAxYmYzYmRkYWJlMWU3NzNmY2E1Y2FkZDViZTlhMDBmIiwidGFnIjoiIn0=' : $this->apiKey;
-                
-                $body = wp_json_encode( $data );
-                
-                $options = [
-                    'body' => $body,
-                    'method' => 'POST',
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer '.$apiKey
-                    ],
-                    'timeout'     => 60,
-                    'redirection' => 5,
-                    'blocking'    => true,
-                    'httpversion' => '1.0',
-                    'sslverify'   => false,
-                    'data_format' => 'body',
-                ];
-                
-                $response = wp_remote_post( $endpoint, $options );
-
-                if ( is_wp_error( $response ) ) {
-                    // $error_message = $response->get_error_message();
-                    $order->update_status('cancelled', __('Unable to complete payment', 'ajomoney-woocommerce' ));
-                    return  array(
-                        'result' => 'error',
-                        'redirect' => $this->get_return_url($order)
-                    );
-                } else {
-
-                    $responseBody  = json_decode( wp_remote_retrieve_body( $response ) );
-                    // wc_add_notice( 'This is a Success notice <pre>'.$this->testMode.json_encode($responseBody->data->url).'</pre>', 'success' );
-
-                    try {
-                        
-                        if ($responseBody->status == 'success') {
-                            # code...
-                            
-                            $redirectUrl = $responseBody->data->url;
-                            // wc_add_notice( 'This is a Success notice <pre>'.$redirectUrl.'</pre>', 'success' );
-                            return  array(
-                                'result' => 'success',
-                                'redirect' => $redirectUrl
-                            );
-                            // wp_redirect( $redirectUrl );
-                            // exit;
-                        }
-                    } catch (\Throwable $th) {
-                        //throw $th;
-                    }
-                }
-
-                die;
-                
             }
 
             public  function thank_you_page() {
                 if($this->instructions) {
-                    echo wpautop( $this->instructions );
+                    echo esc_html(wpautop( $this->instructions ));
                 }
             }
 
@@ -379,7 +274,7 @@ function  ajomoney_payment_init() {
                 if ( isset( $_REQUEST['ref'] ) ) {
                     $baseUrl = $this->testMode ==  'yes' ? 'https://ajomoney-merchant-api.herokuapp.com/api/v1/' : 'https://business-api.myajopay.com/api/v1/';
 
-                    $endpoint = $baseUrl.'store/order/'.$_REQUEST['id'];
+                    $endpoint = $baseUrl.'store/order/'.sanitize_text_field($_REQUEST['id']);
 
                     $apiKey = $this->testMode == 'yes' ? 'eyJpdiI6IlBDMGpIQmhMUHB5ZkVRdE5QbElqOFE9PSIsInZhbHVlIjoiMXlWWERmK1BNRWRiRmdYcGt6VXVSdEZad1F2T1FHRDJSTkJXOENvNVRtRWNPWWVvMU9RcTdCdGh1S2VLZjd3bCtPZHRQcG1ZS1ZaVG8rWWV5eWEyYVVjUTVZMk8xbUFLRzNUSFZjeUVBVjZ4Ym1xYWpzRExtY0JyN3JzNUlFSlciLCJtYWMiOiI5YzE0OGFiZWM5ZjMwYTA0ZTMxODhjOGQwY2I2MGMzNTAxYmYzYmRkYWJlMWU3NzNmY2E1Y2FkZDViZTlhMDBmIiwidGFnIjoiIn0=' : $this->apiKey;
                     
@@ -449,14 +344,6 @@ function  ajomoney_payment_init() {
                     isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
                     $_SERVER['SERVER_NAME']
                 );
-            }
-
-            function console_log($output, $with_script_tags = true) {
-                $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG).');';
-                if ($with_script_tags) {
-                    $js_code = '<script>' . $js_code . '</script>';
-                }
-                echo $js_code;
             }
         }
     }
